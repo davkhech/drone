@@ -9,9 +9,7 @@ var bodyParser = require('body-parser');
 
 var WebSocketServer = require('ws').Server;
 var server = require('http').createServer();
-var wss = new WebSocketServer({
-    server
-});
+var wss = new WebSocketServer({server});
 var url = require('url');
 
 var routes = require('./routes/index');
@@ -28,9 +26,7 @@ app.set('port', process.env.PORT || 8080);
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({
-    extended: false
-}));
+app.use(bodyParser.urlencoded({extended: false}));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -54,23 +50,18 @@ app.use((err, req, res, next) => {
 });
 
 wss.on('connection', (ws) => {
-    console.log('Socket connection established');
+    console.log('Socket connection established: Drone Client');
 
     ws.on('message', (message) => {
         console.log('received: %s', message);
-        ws.send('back to you -> '+ message);
+        ws.send('Sent back -> ' + message);
     });
 
-    ws.send('something');
+    ws.send('Socket connection established: Drone Server');
 });
 
 server.on('request', app);
 
-server.listen(app.get('port'), function() {
+server.listen(app.get('port'), () => {
     console.log('Listening on ' + server.address().port)
 });
-
-
-// app.listen(app.get('port'), () => {
-//   console.log('Server listening on port 8080!');
-// });

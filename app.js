@@ -9,13 +9,18 @@ var bodyParser = require('body-parser');
 
 var WebSocketServer = require('ws').Server;
 var server = require('http').createServer();
-var wss = new WebSocketServer({server});
+var wss = new WebSocketServer({
+    server
+});
 var url = require('url');
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
 
 var app = express();
+
+var RedisClient = require('./redisClient.js');
+var redisClient = new RedisClient;
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -26,7 +31,9 @@ app.set('port', process.env.PORT || 8080);
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.urlencoded({
+    extended: false
+}));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -54,7 +61,13 @@ wss.on('connection', (ws) => {
 
     ws.on('message', (message) => {
         console.log('received: %s', message);
-        ws.send('Sent back -> ' + message);
+        redisClient.writeToRedis(JSON.stringify(message))
+            .then((status) => {
+                ws.send('Ok');
+            })
+            .catch((err) => {
+                ws.send('Error -> ', err);
+            });
     });
 
     ws.send('Socket connection established: Drone Server');
@@ -63,5 +76,5 @@ wss.on('connection', (ws) => {
 server.on('request', app);
 
 server.listen(app.get('port'), () => {
-    console.log('Listening on ' + server.address().port)
+    console.log('Listening on ' + server.address().port);
 });
